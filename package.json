@@ -1,0 +1,19 @@
+{
+  "name": "tutorial-udemy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wlodzimierz-Reif/node.git"
+  },
+  "author": "Wlodek Reif",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Wlodzimierz-Reif/node/issues"
+  },
+  "homepage": "https://github.com/Wlodzimierz-Reif/node#readme"
+}
