@@ -1,13 +1,14 @@
 const http = require("http");
 
 const server = http.createServer((req, res) => {
+  const test = "blah";
   const url = req.url;
   if (url === "/") {
     res.setHeader("Content-Type", "text/html");
     res.write("<html>");
     res.write("<head><title>Users page</title></head>");
     res.write(
-      "<body><form action='/create-user' method='POST'><input type='text' name='username'><button type='submit'>Create user</button></form></body>"
+      "<body><form action='/create-user' method='POST'><input type='text' name='username'><button type='submit'>Create user debug test</button></form></body>"
     );
     res.write("</html>");
     return res.end();
@@ -21,6 +22,7 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
   if (url === "/create-user") {
+    const testmVar = "testvasdsdsd";
     const body = [];
     req.on("data", (chunk) => {
       body.push(chunk);
