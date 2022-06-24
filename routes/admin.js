@@ -11,7 +11,11 @@ const products = [];
 // /admin/add-product => GET
 router.get("/add-product", (req, res, next) => {
   // res.sendFile(path.join(rootDir, "views", "addProduct.html"));
-  res.render("addProduct", { pageTitle: "Add Product" });
+  res.render("addProduct", {
+    // those are fields I'm passing to the view
+    pageTitle: "Add Product",
+    path: "/admin/add-product", // helps view decide which link is active
+  });
 });
 
 // /admin/add-product => POST
