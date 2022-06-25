@@ -8,8 +8,10 @@ const shopRoutes = require("./routes/shop");
 
 const app = express();
 
-app.set("view engine", "pug"); // tells the app what tempate engine to use
-app.set("views", "views"); // tells the app there to find the views (the default already is in 'views' - https://expressjs.com/en/5x/api.html)
+import { expressHbs } from "express-handlebars";
+
+app.set("view engine", "hbs"); // tells the app what tempate engine to use
+app.set("views", "views/handlebars"); // tells the app there to find the views (the default already is in 'views' - https://expressjs.com/en/5x/api.html)
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files
