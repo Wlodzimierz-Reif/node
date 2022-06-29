@@ -15,6 +15,8 @@ router.get("/add-product", (req, res, next) => {
     // those are fields I'm passing to the view
     pageTitle: "Add Product",
     path: "/admin/add-product", // helps view decide which link is active
+    productCSS: true,
+    activeProducts: true,
   });
 });
 

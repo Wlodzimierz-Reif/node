@@ -10,7 +10,12 @@ const adminData = require("./admin");
 
 router.get("/", (req, res, next) => {
   const products = adminData.products;
-  res.render("shop", { products: products, pageTitle: "Shop", path: "/" }); // in app.js already pug is defined as default tempating engine and views as templates folder. We just need to tell express res.render("shop") or "admin" insted of /views/shop.pug etc.
+  res.render("shop", {
+    products: products,
+    pageTitle: "Shop",
+    path: "/",
+    activeShop: true,
+  }); // in app.js already pug is defined as default tempating engine and views as templates folder. We just need to tell express res.render("shop") or "admin" insted of /views/shop.pug etc.
   // {products} injects the data into the
 });
 
