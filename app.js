@@ -4,8 +4,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 // const { create } = require("express-handlebars");
 
-const adminData = require("./routes/admin");
+const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const { getPageNotFound } = require("./controllers/404");
 
 const app = express();
 // const hbs = create({
@@ -21,12 +22,9 @@ app.set("views", "views/ejs"); // tells the app there to find the views (the def
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
 
-app.use("/admin", adminData.router); // allows to omit "/admin" when setting routes in adminRoutes
+app.use("/admin", adminRoutes); // allows to omit "/admin" when setting routes in adminRoutes
 app.use(shopRoutes);
 
-app.use((req, res, next) => {
-  // res.status(404).sendFile(path.join(__dirname, "views", "404.html"));
-  res.status(404).render("404", { pageTitle: "Page Not Found", path: "" });
-});
+app.use(getPageNotFound);
 
 app.listen(3000);
