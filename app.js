@@ -17,7 +17,7 @@ const app = express();
 
 // app.engine("hbs", hbs.engine); // not needed with pu
 app.set("view engine", "ejs"); // tells the app what tempate engine to use. "hbs" tell the app which file extension to use(could be anything)
-app.set("views", "views/ejs"); // tells the app there to find the views (the default already is in 'views' - https://expressjs.com/en/5x/api.html)
+app.set("views", "views"); // tells the app there to find the views (the default already is in 'views' - https://expressjs.com/en/5x/api.html)
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
