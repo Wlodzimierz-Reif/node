@@ -14,9 +14,11 @@ const getProductsFromFile = (cb) => {
 };
 
 module.exports = class Product {
-  constructor(t) {
-    this.title = t;
-    // this.p = path.join(rootDir, "data", "products.json");
+  constructor(title, imageUrl, description, price) {
+    this.title = title;
+    this.imageUrl = imageUrl;
+    this.description = description;
+    this.price = price;
   }
 
   save() {
@@ -25,7 +27,7 @@ module.exports = class Product {
       products.push(this);
       // I need to use arrow function otherwise "this" in line 18 looses it's content
       fs.writeFile(p, JSON.stringify(products), (err) => {
-        console.log(err);
+        console.log("Error: " + err);
       });
     });
   }

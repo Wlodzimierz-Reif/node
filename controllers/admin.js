@@ -2,7 +2,7 @@ const Product = require("../models/product");
 
 exports.getAddProducts = (req, res, next) => {
   // res.sendFile(path.join(rootDir, "views", "addProduct.html"));
-  res.render("addProduct", {
+  res.render("admin/add-product", {
     // those are fields I'm passing to the view
     pageTitle: "Add Product",
     path: "/admin/add-product", // helps view decide which link is active
@@ -12,22 +12,22 @@ exports.getAddProducts = (req, res, next) => {
 };
 
 exports.postAddProucts = (req, res, next) => {
-  const product = new Product(req.body.title);
+  const title = req.body.title;
+  const imageUrl = req.body.imageUrl;
+  const description = req.body.description;
+  const price = req.body.price;
+  const product = new Product(title, imageUrl, description, price);
   product.save(); // saves this class instance to products array
   res.redirect("/");
 };
 
 exports.getProducts = (req, res, next) => {
   Product.fetchAll((products) => {
-    //that's why you add "static" keyword. Otherwise I'd have to create new Product instance with a dummy title to use it's methods
-    // products are returned from callBack function
-    res.render("shop", {
+    res.render("admin/products", {
       products: products,
-      pageTitle: "Shop",
-      path: "/",
+      pageTitle: "Admin Products",
+      path: "/admin/products",
       activeShop: true,
     });
   });
-  // in app.js already pug is defined as default tempating engine and views as templates folder. We just need to tell express res.render("shop") or "admin" insted of /views/shop.pug etc.
-  // {products} injects the data into the
 };
