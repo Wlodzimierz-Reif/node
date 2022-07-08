@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Cart = require("../models/cart");
 
 exports.getProducts = (req, res, next) => {
   Product.fetchAll((products) => {
@@ -47,9 +48,11 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId; // retrieving productId passed from form in product-detail.ejs. Only POST request can access req.body
-  console.log(prodId);
-  res.redirect("/cart")
-}
+  Product.findById(prodId, (product) => {
+    Cart.addProduct(prodId, product.price);
+  });
+  res.redirect("/cart");
+};
 
 exports.getOrders = (req, res, next) => [
   res.render("shop/orders", {
