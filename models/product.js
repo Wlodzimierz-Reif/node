@@ -22,6 +22,7 @@ module.exports = class Product {
   }
 
   save() {
+    this.id = Math.random().toString();
     getProductsFromFile((products) => {
       // using the same function but passing other as a callback
       products.push(this);
@@ -36,6 +37,13 @@ module.exports = class Product {
     // static means you can call this directly on the class and not only on object instanciated using this class
     getProductsFromFile(cb);
     // passing in a callback function that executes when fetchAll is called in products.js Controller that renders the page
+  }
+
+  static findById(id, cb) {
+    getProductsFromFile((products) => {
+      const product = products.find((p) => p.id === id);
+      cb(product);
+    });
   }
 };
 

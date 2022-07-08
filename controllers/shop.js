@@ -15,6 +15,18 @@ exports.getProducts = (req, res, next) => {
   // {products} injects the data into the
 };
 
+exports.getProduct = (req, res, next) => {
+  const prodId = req.params.productId; // extracts :productId from address
+  Product.findById(prodId, (product) => {
+    res.render("shop/product-detail", {
+      product: product,
+      pageTitle: product.title,
+      path: "/products",
+    });
+  });
+  // res.redirect("/");
+};
+
 exports.getIndex = (req, res, next) => {
   Product.fetchAll((products) => {
     res.render("shop/index", {
@@ -33,12 +45,18 @@ exports.getCart = (req, res, next) => {
   });
 };
 
+exports.postCart = (req, res, next) => {
+  const prodId = req.body.productId; // retrieving productId passed from form in product-detail.ejs. Only POST request can access req.body
+  console.log(prodId);
+  res.redirect("/cart")
+}
+
 exports.getOrders = (req, res, next) => [
   res.render("shop/orders", {
     pageTitle: "Orders",
-    path: "/orders"
-  })
-]
+    path: "/orders",
+  }),
+];
 
 exports.getCheckout = (req, res, next) => {
   res.render("shop/checkout", {

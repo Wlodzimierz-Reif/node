@@ -31,9 +31,8 @@
                   </p>
                 </div>
                 <div class="card__actions">
-                  <form action="/add-to-card">
-                    <button type="submit" class="btn">Add to Cart</button>
-                  </form>
+                  <%- include("../includes/add-to-cart.ejs", {product: product}) %>
+                  <!-- need to pass {product: product} as product is a local variable in this loop so it cannot access product  -->
                 </div>
               </article>
               <% }) %>
