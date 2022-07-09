@@ -14,7 +14,8 @@ const getProductsFromFile = (cb) => {
 };
 
 module.exports = class Product {
-  constructor(title, imageUrl, description, price) {
+  constructor(id, title, imageUrl, description, price) {
+    this.id = id;
     this.title = title;
     this.imageUrl = imageUrl;
     this.description = description;
@@ -22,14 +23,27 @@ module.exports = class Product {
   }
 
   save() {
-    this.id = Math.random().toString();
     getProductsFromFile((products) => {
+      console.log(this.id);
+      // I need to use arrow function otherwise "this" in line looses it's content
       // using the same function but passing other as a callback
-      products.push(this);
-      // I need to use arrow function otherwise "this" in line 18 looses it's content
-      fs.writeFile(p, JSON.stringify(products), (err) => {
-        console.log("Error: " + err);
-      });
+      if (this.id) {
+        // updates the product if already exists
+        const existingProductIndex = products.findIndex(
+          (product) => product.id === this.id
+        );
+        const updatedProducts = [...products];
+        updatedProducts[existingProductIndex] = this;
+        fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
+          console.log("Error: " + err);
+        });
+      } else {
+        this.id = Math.random().toString();
+        products.push(this);
+        fs.writeFile(p, JSON.stringify(products), (err) => {
+          console.log("Error: " + err);
+        });
+      }
     });
   }
 
