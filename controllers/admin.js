@@ -15,9 +15,28 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const description = req.body.description;
   const price = req.body.price;
-  const product = new Product(null, title, imageUrl, description, price);
-  product.save(); // saves this class instance to products array
-  res.redirect("/");
+  // we can use it because of associations(User has many Products in app.js). Sequelize automaticaly adds method create{nameOfTheModel}.
+  req.user
+    .createProduct({
+      title: title,
+      imageUrl: imageUrl,
+      description: description,
+      price: price,
+    })
+    // Product.create({
+    //   title: title,
+    //   imageUrl: imageUrl,
+    //   description: description,
+    //   price: price,
+    //   userId: req.user.id,
+    // })
+    .then((result) => {
+      console.log("Created product");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -26,50 +45,84 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/"); // could be eirther "return" or wrapping rest in "else"
   }
   const prodId = req.params.productId;
-  Product.findById(prodId, (product) => {
-    if (!product) {
-      return res.redirect("/");
-    }
-    res.render("admin/edit-product", {
-      pageTitle: "Edit Product",
-      path: "/admin/edit-product",
-      editing: editMode,
-      product: product,
+  // Product.findByPk(prodId)
+  req.user
+    .getProducts({ where: { id: prodId } })
+    .then((product) => {
+      if (!product) {
+        return res.redirect("/");
+      }
+      res.render("admin/edit-product", {
+        pageTitle: "Edit Product",
+        path: "/admin/edit-product",
+        editing: editMode,
+        product: product,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
 };
 
 exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId; // in POST request product ID is passed via hidden input (check edit-product.ejs)
-  console.log(prodId);
   const updatedTitle = req.body.title;
   const updatedImageUrl = req.body.imageUrl;
   const updatedDescription = req.body.description;
   const updatedPrice = req.body.price;
-  const updatedProduct = new Product( // creates new instance with updated params and saves it. We're passing in prodId so it edits existing product and not adds a new one(see save() method in product.js controller)
-    prodId,
-    updatedTitle,
-    updatedImageUrl,
-    updatedDescription,
-    updatedPrice
-  );
-  updatedProduct.save();
+  Product.findByPk(prodId)
+    .then((product) => {
+      product.title = updatedTitle;
+      product.imageUrl = updatedImageUrl;
+      product.description = updatedDescription;
+      product.price = updatedPrice;
+      return product.save(); // it's sequelize mathod that saves the product to DB. If product doesn't exist it will creat new, if does then will overwrite existing record
+    }) // to chain .then()you need to return the previous(it return promise)
+    .then((result) => {
+      console.log("Updated product");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  // const updatedProduct = new Product( // creates new instance with updated params and saves it. We're passing in prodId so it edits existing product and not adds a new one(see save() method in product.js controller)
+  //   prodId,
+  //   updatedTitle,
+  //   updatedImageUrl,
+  //   updatedDescription,
+  //   updatedPrice
+  // );
+  // updatedProduct.save();
   res.redirect("/admin/products");
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
-    res.render("admin/products", {
-      products: products,
-      pageTitle: "Admin Products",
-      path: "/admin/products",
-      activeShop: true,
+  req.user
+    .getProducts()
+    .then((products) => {
+      res.render("admin/products", {
+        products: products,
+        pageTitle: "Admin Products",
+        path: "/admin/products",
+        activeShop: true,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId);
-  res.redirect("/admin/products");
+  Product.findByPk(prodId)
+    .then((product) => {
+      return product.destroy();
+    })
+    .then((result) => {
+      console.log("Destroyed record");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };

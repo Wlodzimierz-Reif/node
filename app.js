@@ -2,29 +2,64 @@ const path = require("path");
 
 const express = require("express");
 const bodyParser = require("body-parser");
-// const { create } = require("express-handlebars");
+
+const { getPageNotFound } = require("./controllers/404");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
-const { getPageNotFound } = require("./controllers/404");
+
+const sequelize = require("./helpers/database");
+const Product = require("./models/product");
+const User = require("./models/user");
+console.log();
 
 const app = express();
-// const hbs = create({
-//   layoutsDir: "views/handlebars/layouts",
-//   defaultLayout: "main",
-//   extname: "hbs", // that allows to use .hbs extension in main layout. Otherwise it'll look for .handlebars file
-// }); // config for handlebars
 
-// app.engine("hbs", hbs.engine); // not needed with pu
+// SETS UP THE VIEWS ENGINE AND FOLDER
 app.set("view engine", "ejs"); // tells the app what tempate engine to use. "hbs" tell the app which file extension to use(could be anything)
 app.set("views", "views"); // tells the app there to find the views (the default already is in 'views' - https://expressjs.com/en/5x/api.html)
 
+// REGISTERED MIDDLEWARE.
+// All of that will be used only if we run succesfully sequeize initialisation
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
+app.use((req, res, next) => {
+  User.findByPk(1)
+  .then(user => {
+    req.user = user; // now we can use the fetched user in our app
+    next(); // otherwise we get stuck
+  })
+  .catch(err => {console.log(err);});
+});
 
+// REGISTERS ROUTES
 app.use("/admin", adminRoutes); // allows to omit "/admin" when setting routes in adminRoutes
 app.use(shopRoutes);
-
 app.use(getPageNotFound);
 
-app.listen(3000);
+// SETS TABLE RELATIONS
+Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); // this relates the DB tables. second argument is a config
+User.hasMany(Product);
+
+// RUNS AT THE BEGINNING OF THE APPLICATION NOT ONLY WHEN REQUEST COMES IN.
+sequelize
+  // .sync({ force: true }) // overwrites you table(drops all existing and replaces them). TO be used in production only to reflect the changes in ode
+  .sync()
+  // sync() creates a table in DB using defined model
+  .then((result) => {
+    return User.findByPk(1); // dummy code to find if I have user or whether I need to create one
+    // console.log(result);
+  })
+  .then((user) => {
+    if (!user) {
+      return User.create({ name: "Vlodev", email: "dummy@email.com" });
+    }
+    // return Promise.resolve(user); // it automaticly resolves to user. We need to return promise to chain .then and "user" is not a promise. But it's not necessary as everything returned in .then is automaticly wrapped in promise
+    return user;
+  })
+  .then((user) => {
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });

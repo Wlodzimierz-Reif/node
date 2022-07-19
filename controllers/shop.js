@@ -2,41 +2,67 @@ const Product = require("../models/product");
 const Cart = require("../models/cart");
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
-    //that's why you add "static" keyword. Otherwise I'd have to create new Product instance with a dummy title to use it's methods
-    // products are returned from callBack function
-    res.render("shop/product-list", {
-      products: products,
-      pageTitle: "Shop",
-      path: "/products",
-      activeShop: true,
+  Product.findAll()
+    .then((products) => {
+      console.log(products);
+      res.render("shop/product-list", {
+        products: products,
+        pageTitle: "Shop",
+        path: "/products",
+        activeShop: true,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
   // in app.js already pug is defined as default tempating engine and views as templates folder. We just need to tell express res.render("shop") or "admin" insted of /views/shop.pug etc.
   // {products} injects the data into the
 };
 
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId; // extracts :productId from address
-  Product.findById(prodId, (product) => {
-    res.render("shop/product-detail", {
-      product: product,
-      pageTitle: product.title,
-      path: "/products",
-    });
-  });
+  // Product.findAll({
+  //   where: {
+  //     id: prodId,
+  //   },
+  // })
+  Product.findByPk(prodId)
+    .then((product) => {
+      res.render("shop/product-detail", {
+        product: product,
+        pageTitle: product.title,
+        path: "/products",
+      });
+    })
+    .catch((err) => console.log(err));
   // res.redirect("/");
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll((products) => {
-    res.render("shop/index", {
-      products: products,
-      pageTitle: "Shop",
-      path: "/",
-      activeShop: true,
+  // meand get home page (index.html) not item Index...
+  Product.findAll()
+    .then((products) => {
+      res.render("shop/index", {
+        products: products,
+        pageTitle: "Shop",
+        path: "/",
+        activeShop: true,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
+  // Product.fetchAll()
+  //   .then(([rows, fieldData]) => {
+  //     // object destructuring
+  //     res.render("shop/index", {
+  //       products: rows,
+  //       pageTitle: "Shop",
+  //       path: "/",
+  //       activeShop: true,
+  //     });
+  //   })
+  //   .catch((err) => console.log(err));
 };
 
 exports.getCart = (req, res, next) => {
@@ -72,7 +98,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   Product.findById(prodId, (product) => {
     Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart")
+    res.redirect("/cart");
   });
 };
 
