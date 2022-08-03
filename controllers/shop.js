@@ -16,7 +16,7 @@ exports.getProducts = (req, res, next) => {
       console.log(err);
     });
   // in app.js already pug is defined as default tempating engine and views as templates folder. We just need to tell express res.render("shop") or "admin" insted of /views/shop.pug etc.
-  // {products} injects the data into the
+  // {products} injects the data into the template
 };
 
 exports.getProduct = (req, res, next) => {
@@ -52,54 +52,78 @@ exports.getIndex = (req, res, next) => {
     .catch((err) => {
       console.log(err);
     });
-  // Product.fetchAll()
-  //   .then(([rows, fieldData]) => {
-  //     // object destructuring
-  //     res.render("shop/index", {
-  //       products: rows,
-  //       pageTitle: "Shop",
-  //       path: "/",
-  //       activeShop: true,
-  //     });
-  //   })
-  //   .catch((err) => console.log(err));
 };
 
 exports.getCart = (req, res, next) => {
-  Cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      products.forEach((product) => {
-        const cartProductData = cart.products.find(
-          (prod) => prod.id === product.id
-        );
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      });
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts(); //we can get products from cart thaks to "Cart.belongsToMany(Product, { through: CartItem })" association in app.js
+    })
+    .then((products) => {
       res.render("shop/cart", {
         pageTitle: "Your Cart",
         path: "/cart",
-        products: cartProducts,
+        products: products,
       });
-    });
-  });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId; // retrieving productId passed from form in product-detail.ejs. Only POST request can access req.body
-  Product.findById(prodId, (product) => {
-    Cart.addProduct(prodId, product.price);
-  });
-  res.redirect("/cart");
+  let fetchedCart;
+  let newQuantity = 1;
+  req.user
+    .getCart()
+    .then((cart) => {
+      fetchedCart = cart;
+      return cart.getProducts({ where: { id: prodId } }); // retrieve only single product
+    })
+    .then((products) => {
+      let product;
+      if (products.length > 0) {
+        product = products[0];
+      }
+      if (product) {
+        const oldQuantity = product.cartItem.quantity;
+        newQuantity = oldQuantity + 1;
+        return product;
+      }
+      return Product.findByPk(prodId);
+    })
+    .then((product) => {
+      // another magic sequelize method to manage many to many relationss
+      return fetchedCart.addProduct(product, {
+        through: { quantity: newQuantity },
+      });
+    })
+    .then(() => {
+      res.redirect("/cart");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts({ where: { id: prodId } });
+    })
+    .then((products) => {
+      const product = products[0];
+      return product.cartItem.destroy();
+    })
+    .then((result) => {
+      res.redirect("/cart");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  // Product.findById(prodId, (product) => {
+  //   Cart.deleteProduct(prodId, product.price);
+  // });
 };
 
 exports.getOrders = (req, res, next) => [

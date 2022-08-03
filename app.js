@@ -11,7 +11,8 @@ const shopRoutes = require("./routes/shop");
 const sequelize = require("./helpers/database");
 const Product = require("./models/product");
 const User = require("./models/user");
-console.log();
+const Cart = require("./models/cart");
+const CartItem = require("./models/cart-item");
 
 const app = express();
 
@@ -25,11 +26,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
 app.use((req, res, next) => {
   User.findByPk(1)
-  .then(user => {
-    req.user = user; // now we can use the fetched user in our app
-    next(); // otherwise we get stuck
-  })
-  .catch(err => {console.log(err);});
+    .then((user) => {
+      req.user = user; // now we can use the fetched user in our app
+      next(); // otherwise we get stuck
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 // REGISTERS ROUTES
@@ -40,6 +43,10 @@ app.use(getPageNotFound);
 // SETS TABLE RELATIONS
 Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" }); // this relates the DB tables. second argument is a config
 User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User); // optional. Inversion of UserhasOne(Cart)
+Cart.belongsToMany(Product, { through: CartItem }); // through sets intermettiary table that holds the connection
+Product.belongsToMany(Cart, { through: CartItem });
 
 // RUNS AT THE BEGINNING OF THE APPLICATION NOT ONLY WHEN REQUEST COMES IN.
 sequelize
@@ -58,6 +65,15 @@ sequelize
     return user;
   })
   .then((user) => {
+    user.getCart().then((cart) => {
+      if (!cart) {
+        return user.createCart();
+      } else {
+        return cart;
+      }
+    });
+  })
+  .then((cart) => {
     app.listen(3000);
   })
   .catch((err) => {
