@@ -13,6 +13,8 @@ const Product = require("./models/product");
 const User = require("./models/user");
 const Cart = require("./models/cart");
 const CartItem = require("./models/cart-item");
+const Order = require("./models/order");
+const OrderItem = require("./models/order-item");
 
 const app = express();
 
@@ -47,6 +49,9 @@ User.hasOne(Cart);
 Cart.belongsTo(User); // optional. Inversion of UserhasOne(Cart)
 Cart.belongsToMany(Product, { through: CartItem }); // through sets intermettiary table that holds the connection
 Product.belongsToMany(Cart, { through: CartItem });
+Order.belongsTo(User);
+User.hasMany(Order);
+Order.belongsToMany(Product, { through: OrderItem });
 
 // RUNS AT THE BEGINNING OF THE APPLICATION NOT ONLY WHEN REQUEST COMES IN.
 sequelize
@@ -67,6 +72,7 @@ sequelize
   .then((user) => {
     user.getCart().then((cart) => {
       if (!cart) {
+        // we can call createCart() on user thanks to sequelize associations. We can use get, set, add, add(for multiple items instead of addCart use addCarts), remove(for one, for many add "s"), has(one and many), count and create on associated models
         return user.createCart();
       } else {
         return cart;

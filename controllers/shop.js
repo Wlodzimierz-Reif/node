@@ -1,10 +1,9 @@
 const Product = require("../models/product");
-const Cart = require("../models/cart");
+const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
     .then((products) => {
-      console.log(products);
       res.render("shop/product-list", {
         products: products,
         pageTitle: "Shop",
@@ -126,16 +125,55 @@ exports.postCartDeleteProduct = (req, res, next) => {
   // });
 };
 
-exports.getOrders = (req, res, next) => [
-  res.render("shop/orders", {
-    pageTitle: "Orders",
-    path: "/orders",
-  }),
-];
-
-exports.getCheckout = (req, res, next) => {
-  res.render("shop/checkout", {
-    pageTitle: "Checkout",
-    path: "/checkout",
-  });
+exports.postOrder = (req, res, next) => {
+  // you get user's cart, get products from that cart, then you create an order on that user and then you add products to that order with the quantity
+  let fetchedCart;
+  req.user
+    .getCart()
+    .then((cart) => {
+      fetchedCart = cart;
+      return cart.getProducts();
+    })
+    .then((products) => {
+      return (
+        req.user
+          .createOrder()
+          // createOrder() we get thanks to associations. It's sequelize method.
+          .then((order) => {
+            // below associates products to that order
+            return order.addProducts(
+              products.map((product) => {
+                // "orderItem" name comes from OrderItem model name(first arguent in "define")
+                product.orderItem = { quantity: product.cartItem.quantity };
+                return product;
+              })
+            );
+          })
+          .catch((err) => console.log(err))
+      );
+    })
+    .then((result) => {
+      // after you create order you clear the cart
+      return fetchedCart.setProducts(null);
+    })
+    .then((result) => {
+      res.redirect("/orders");
+    })
+    .catch((err) => console.log(err));
 };
+
+exports.getOrders = (req, res, next) => {
+  // getOrders is magic method added by sequelize
+  req.user
+  // below is an example of sequelize eager loading. Works because we have relation between orders and products. You can then use .products in view file for every passed order
+    .getOrders({ include: ["products"] })
+    .then((orders) => {
+      res.render("shop/orders", {
+        pageTitle: "Orders",
+        path: "/orders",
+        orders: orders,
+      });
+    })
+    .catch((err) => console.log(err));
+};
+
