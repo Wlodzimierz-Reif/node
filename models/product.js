@@ -1,32 +1,120 @@
-const { Sequelize } = require("sequelize");
+const mongodb = require("mongodb");
+const { getDb } = require("../helpers/database");
 
-const sequelize = require("../helpers/database");
+class Product {
+  // id is optional. If undefined mongodb will generate is automatically
+  constructor(title, price, description, imageUrl, id) {
+    this.title = title;
+    this.price = price;
+    this.description = description;
+    this.imageUrl = imageUrl;
+    // need ternery here as mongodb.ObjectId() will create one even if id is undefined
+    this._id = id ? mongodb.ObjectId(id) : null;
+  }
 
-const Product = sequelize.define("product", {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    allowNull: false,
-    primaryKey: true, // similar to index
-  },
-  title: Sequelize.STRING,
-  price: {
-    type: Sequelize.DOUBLE,
-    allowNull: false,
-  },
-  imageUrl: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
-});
+  save() {
+    console.log(this._id);
+    const db = getDb();
+    let dbOp;
+    if (this._id) {
+      console.log("updating");
+      dbOp = db
+        .collection("products")
+        .updateOne({ _id: this._id }, { $set: this });
+      // $set is a mongoDB thing for updating
+    } else {
+      console.log("Creating product");
+      dbOp = db.collection("products").insertOne(this);
+    }
+    return dbOp
+      .then((result) => {
+        // this is Javascript but gets converted to JSON by MongoDB
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static fetchAll() {
+    const db = getDb();
+    // .find return a cursor which is an object provided by mongoDB that allows us to go through elements
+    // do not call find().toArray() with a lot of documents. Implement pagination then
+    return db
+      .collection("products")
+      .find()
+      .toArray()
+      .then((products) => {
+        // console.log(products);W
+        return products;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static findById(prodId) {
+    const db = getDb();
+    // next() is an utility function that will get the last document found(mongoDB doesn't know we are only looking for one)
+    return db
+      .collection("products")
+      .find({ _id: new mongodb.ObjectId(prodId) })
+      .next()
+      .then((product) => {
+        return product;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  static deleteById(prodId) {
+    const db = getDb();
+    return db
+      .collection("products")
+      .deleteOne({ _id: new mongodb.ObjectId(prodId) })
+      .then((result) => {
+        console.log("Deleted item");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+}
 
 module.exports = Product;
 
-// OLD VERSION WITHOUT DATABASE AND SEQUELIZE
+/////////////////// MYSQL STUFF
+
+// const { Sequelize } = require("sequelize");
+
+// const sequelize = require("../helpers/database");
+
+// const Product = sequelize.define("product", {
+//   id: {
+//     type: Sequelize.INTEGER,
+//     autoIncrement: true,
+//     allowNull: false,
+//     primaryKey: true, // similar to index
+//   },
+//   title: Sequelize.STRING,
+//   price: {
+//     type: Sequelize.DOUBLE,
+//     allowNull: false,
+//   },
+//   imageUrl: {
+//     type: Sequelize.STRING,
+//     allowNull: false,
+//   },
+//   description: {
+//     type: Sequelize.STRING,
+//     allowNull: false,
+//   },
+// });
+
+// module.exports = Product;
+
+/////////////////////// OLD VERSION WITHOUT DATABASE AND SEQUELIZE
 
 // const db = require("../helpers/database");
 // const fs = require("fs");
