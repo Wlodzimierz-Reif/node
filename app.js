@@ -8,6 +8,7 @@ const shopRoutes = require("./routes/shop");
 const { getPageNotFound } = require("./controllers/404");
 
 const { mongoConnect } = require("./helpers/database");
+const User = require("./models/user");
 
 const app = express();
 
@@ -19,17 +20,16 @@ app.set("views", "views"); // tells the app there to find the views (the default
 // All of that will be used only if we run succesfully sequeize initialisation
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
+
 app.use((req, res, next) => {
-  // MYSQL STUFF
-  // User.findByPk(1)
-  //   .then((user) => {
-  //     req.user = user; // now we can use the fetched user in our app
-  //     next(); // otherwise we get stuck
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  // });
-  next();
+  User.findById("62ecae6bf342cd926f4fa2c2")
+    .then((user) => {
+      req.user = user; // now we can use the fetched user in our app
+      next(); // otherwise we get stuck
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 // REGISTERS ROUTES (Middleware)

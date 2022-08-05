@@ -3,17 +3,17 @@ const { getDb } = require("../helpers/database");
 
 class Product {
   // id is optional. If undefined mongodb will generate is automatically
-  constructor(title, price, description, imageUrl, id) {
+  constructor(title, price, description, imageUrl, id, userId) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
     // need ternery here as mongodb.ObjectId() will create one even if id is undefined
     this._id = id ? mongodb.ObjectId(id) : null;
+    this.userId = userId;
   }
 
   save() {
-    console.log(this._id);
     const db = getDb();
     let dbOp;
     if (this._id) {
