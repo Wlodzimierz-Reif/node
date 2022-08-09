@@ -24,7 +24,8 @@ app.use(express.static(path.join(__dirname, "public"))); // enables read access 
 app.use((req, res, next) => {
   User.findById("62ecae6bf342cd926f4fa2c2")
     .then((user) => {
-      req.user = user; // now we can use the fetched user in our app
+      // that instead of req.user = user gives me class of User that I can use all User methods on instead of just data
+      req.user = new User(user.username, user.email, user.cart, user._id); // now we can use the fetched user in our app
       next(); // otherwise we get stuck
     })
     .catch((err) => {

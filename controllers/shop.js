@@ -51,9 +51,6 @@ exports.getIndex = (req, res, next) => {
 exports.getCart = (req, res, next) => {
   req.user
     .getCart()
-    .then((cart) => {
-      return cart.getProducts(); //we can get products from cart thaks to "Cart.belongsToMany(Product, { through: CartItem })" association in app.js
-    })
     .then((products) => {
       res.render("shop/cart", {
         pageTitle: "Your Cart",
@@ -66,48 +63,9 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId; // retrieving productId passed from form in product-detail.ejs. Only POST request can access req.body
-  let fetchedCart;
-  let newQuantity = 1;
-  req.user
-    .getCart()
-    .then((cart) => {
-      fetchedCart = cart;
-      return cart.getProducts({ where: { id: prodId } }); // retrieve only single product
-    })
-    .then((products) => {
-      let product;
-      if (products.length > 0) {
-        product = products[0];
-      }
-      if (product) {
-        const oldQuantity = product.cartItem.quantity;
-        newQuantity = oldQuantity + 1;
-        return product;
-      }
-      return Product.findByPk(prodId);
-    })
+  Product.findById(prodId)
     .then((product) => {
-      // another magic sequelize method to manage many to many relationss
-      return fetchedCart.addProduct(product, {
-        through: { quantity: newQuantity },
-      });
-    })
-    .then(() => {
-      res.redirect("/cart");
-    })
-    .catch((err) => console.log(err));
-};
-
-exports.postCartDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
-  req.user
-    .getCart()
-    .then((cart) => {
-      return cart.getProducts({ where: { id: prodId } });
-    })
-    .then((products) => {
-      const product = products[0];
-      return product.cartItem.destroy();
+      return req.user.addToCart(product);
     })
     .then((result) => {
       res.redirect("/cart");
@@ -115,9 +73,18 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch((err) => {
       console.log(err);
     });
-  // Product.findById(prodId, (product) => {
-  //   Cart.deleteProduct(prodId, product.price);
-  // });
+};
+
+exports.postCartDeleteProduct = (req, res, next) => {
+  const prodId = req.body.productId;
+  req.user
+    .deleteItemFromCart(prodId)
+    .then((result) => {
+      res.redirect("/cart");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.postOrder = (req, res, next) => {
