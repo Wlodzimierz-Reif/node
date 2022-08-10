@@ -88,36 +88,9 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
-  // you get user's cart, get products from that cart, then you create an order on that user and then you add products to that order with the quantity
   let fetchedCart;
   req.user
-    .getCart()
-    .then((cart) => {
-      fetchedCart = cart;
-      return cart.getProducts();
-    })
-    .then((products) => {
-      return (
-        req.user
-          .createOrder()
-          // createOrder() we get thanks to associations. It's sequelize method.
-          .then((order) => {
-            // below associates products to that order
-            return order.addProducts(
-              products.map((product) => {
-                // "orderItem" name comes from OrderItem model name(first arguent in "define")
-                product.orderItem = { quantity: product.cartItem.quantity };
-                return product;
-              })
-            );
-          })
-          .catch((err) => console.log(err))
-      );
-    })
-    .then((result) => {
-      // after you create order you clear the cart
-      return fetchedCart.setProducts(null);
-    })
+    .addOrder()
     .then((result) => {
       res.redirect("/orders");
     })
@@ -125,10 +98,8 @@ exports.postOrder = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-  // getOrders is magic method added by sequelize
   req.user
-    // below is an example of sequelize eager loading. Works because we have relation between orders and products. You can then use .products in view file for every passed order
-    .getOrders({ include: ["products"] })
+    .getOrders()
     .then((orders) => {
       res.render("shop/orders", {
         pageTitle: "Orders",
