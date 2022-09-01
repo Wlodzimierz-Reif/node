@@ -21,7 +21,7 @@ let _db;
 
 const mongoConnect = (callback) => {
   MongoClient.connect(
-    "mongodb+srv://wlodev:test@cluster0.nrwbdc3.mongodb.net/shop?retryWrites=true&w=majority"
+    "mongodb+srv://wlodev:wlodev@cluster0.nrwbdc3.mongodb.net/shop?retryWrites=true&w=majority"
   )
     // in uri I've added "shop" so it connects to it
     .then((client) => {

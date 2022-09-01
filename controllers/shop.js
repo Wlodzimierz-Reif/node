@@ -2,8 +2,10 @@ const Product = require("../models/product");
 // const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  // Product.fetchAll() // vanilla mongoDB stuff
+  Product.find() // Mongoose method for fetching all
     .then((products) => {
+      console.log(products);
       res.render("shop/product-list", {
         products: products,
         pageTitle: "Shop",
@@ -21,7 +23,8 @@ exports.getProducts = (req, res, next) => {
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId; // extracts :productId from address
 
-  Product.findById(prodId)
+  Product.findById(prodId) // it's mongoDB and mongoose method
+  // mongoose can even convert "prodIs" string to object
     .then((product) => {
       res.render("shop/product-detail", {
         product: product,
@@ -34,7 +37,8 @@ exports.getProduct = (req, res, next) => {
 
 exports.getIndex = (req, res, next) => {
   // meand get home page (index.html) not item Index...
-  Product.fetchAll()
+  // Product.fetchAll()
+  Product.find() // Mongoose method
     .then((products) => {
       res.render("shop/index", {
         products: products,

@@ -19,15 +19,17 @@ exports.postAddProduct = (req, res, next) => {
   const description = req.body.description;
   const imageUrl = req.body.imageUrl;
   const product = new Product(
-    title,
-    price,
-    description,
-    imageUrl,
-    null,
-    req.user._id
+    // mondoDB stuff
+    // title,
+    // price,
+    // description,
+    // imageUrl,
+    // null,
+    // req.user._id
+    { title: title, price: price, description: description, imageUrl: imageUrl }
   );
   product
-    .save()
+    .save() // now this method comes from mongoose. Our "save()" is commented out
     .then(() => {
       console.log("Created product");
       res.redirect("/admin/products");
@@ -38,7 +40,8 @@ exports.postAddProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  // Product.fetchAll()
+  Product.find() // mongoose method
     .then((products) => {
       res.render("admin/products", {
         products: products,
@@ -82,16 +85,15 @@ exports.postEditProduct = (req, res, next) => {
   const updatedDescription = req.body.description;
   const updatedImageUrl = req.body.imageUrl;
 
-  const product = new Product(
-    updatedTitle,
-    updatedPrice,
-    updatedDescription,
-    updatedImageUrl,
-    prodId
-  );
-  // to chain .then()you need to return the previous(it return promise)
-  product
-    .save()
+  Product.findById(prodId)
+    .then((product) => {
+      product.title = updatedTitle;
+      product.price = updatedPrice;
+      product.description = updatedDescription;
+      product.imageUrl = updatedImageUrl;
+      return product.save(); // this is now Mongoose method that will update the product
+    })
+    // to chain .then()you need to return the previous(it return promise)
     .then((result) => {
       console.log("Updated product");
       res.redirect("/admin/products");
@@ -99,11 +101,24 @@ exports.postEditProduct = (req, res, next) => {
     .catch((err) => {
       console.log(err);
     });
+
+  // mongoDB stuff
+
+  // const product = new Product(
+  //   updatedTitle,
+  //   updatedPrice,
+  //   updatedDescription,
+  //   updatedImageUrl,
+  //   prodId
+  // );
+  // product
+  //   .save()
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId)
+  // Product.deleteById(prodId) 
+  Product.findByIdAndDelete(prodId) // Mongoose method
     .then(() => {
       console.log("Destroyed record");
       res.redirect("/admin/products");

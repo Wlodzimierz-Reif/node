@@ -2,13 +2,14 @@ const path = require("path");
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const { getPageNotFound } = require("./controllers/404");
 
 const { mongoConnect } = require("./helpers/database");
-const User = require("./models/user");
+// const User = require("./models/user");
 
 const app = express();
 
@@ -21,28 +22,38 @@ app.set("views", "views"); // tells the app there to find the views (the default
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
 
-app.use((req, res, next) => {
-  User.findById("62f34a0707fe480834e1fcb5")
-    .then((user) => {
-      // that instead of req.user = user gives me class of User that I can use all User methods on instead of just data
-      req.user = new User(user.name, user.email, user.cart, user._id); // now we can use the fetched user in our app
-      next(); // otherwise we get stuck
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-});
+// app.use((req, res, next) => {
+//   User.findById("62f34a0707fe480834e1fcb5")
+//     .then((user) => {
+//       // that instead of req.user = user gives me class of User that I can use all User methods on instead of just data
+//       req.user = new User(user.name, user.email, user.cart, user._id); // now we can use the fetched user in our app
+//       next(); // otherwise we get stuck
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// });
 
 // REGISTERS ROUTES (Middleware)
 app.use("/admin", adminRoutes); // allows to omit "/admin" when setting routes in adminRoutes
 app.use(shopRoutes);
 app.use(getPageNotFound);
 
-mongoConnect(() => {
-  app.listen(3000);
-});
+// mongoConnect(() => {
+//   app.listen(3000);
+// });
+mongoose
+  .connect(
+    "mongodb+srv://wlodev:wlodev@cluster0.nrwbdc3.mongodb.net/shop?retryWrites=true&w=majority"
+  )
+  .then((result) => {
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
-///////// MYSQL STUFF
+///////// SQL STUFF
 
 // const sequelize = require("./helpers/database");
 // const Product = require("./models/product");
