@@ -19,6 +19,12 @@ const productSchema = new Schema({
     type: String,
     required: true,
   },
+  userId: {
+    // this sets up relation between Product and User
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Product", productSchema); //it defines name of the model

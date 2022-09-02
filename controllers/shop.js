@@ -1,11 +1,10 @@
 const Product = require("../models/product");
-// const Order = require("../models/order");
+const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
   // Product.fetchAll() // vanilla mongoDB stuff
   Product.find() // Mongoose method for fetching all
     .then((products) => {
-      console.log(products);
       res.render("shop/product-list", {
         products: products,
         pageTitle: "Shop",
@@ -24,7 +23,7 @@ exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId; // extracts :productId from address
 
   Product.findById(prodId) // it's mongoDB and mongoose method
-  // mongoose can even convert "prodIs" string to object
+    // mongoose can even convert "prodIs" string to object
     .then((product) => {
       res.render("shop/product-detail", {
         product: product,
@@ -54,8 +53,13 @@ exports.getIndex = (req, res, next) => {
 
 exports.getCart = (req, res, next) => {
   req.user
-    .getCart()
-    .then((products) => {
+    // MongoDB way
+
+    // .getCart()
+    .populate("cart.items.productId") // it fetches and populates all ths data in this indicated place
+    // .execPopulate() // in old mongoose .populate doesn't return promise so it must be turned into one
+    .then((user) => {
+      const products = user.cart.items;
       res.render("shop/cart", {
         pageTitle: "Your Cart",
         path: "/cart",
@@ -67,9 +71,9 @@ exports.getCart = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId; // retrieving productId passed from form in product-detail.ejs. Only POST request can access req.body
-  Product.findById(prodId)
+  Product.findById(prodId) // is't both MondoDB and Mongoose method
     .then((product) => {
-      return req.user.addToCart(product);
+      return req.user.addToCart(product); // we've added this custom method using mongoose to user model
     })
     .then((result) => {
       res.redirect("/cart");
@@ -82,7 +86,7 @@ exports.postCart = (req, res, next) => {
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   req.user
-    .deleteItemFromCart(prodId)
+    .removeFromCart(prodId)
     .then((result) => {
       res.redirect("/cart");
     })
@@ -92,18 +96,35 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
-  let fetchedCart;
   req.user
-    .addOrder()
+    .populate("cart.items.productId")
+    .then((user) => {
+      const products = user.cart.items.map((i) => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+        // { ...i.productId._doc } is needed as otherwise it stores only product id not the whole object. _doc is the mongoose method that gives us access to the whole object incuding metadata(that we can't see)
+      });
+      const order = new Order({
+        user: {
+          name: req.user.name,
+          usedId: req.user, // mongoose will automaticaly pick Id. No need to write req.user._id
+        },
+        products: products,
+      });
+      order.save();
+    })
     .then((result) => {
+      req.user.clearCart();
+    })
+    .then(() => {
       res.redirect("/orders");
     })
     .catch((err) => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {
-  req.user
-    .getOrders()
+  req.user;
+  // .getOrders() // old MongoDB
+  Order.find({ "user.userId": req.user._id })
     .then((orders) => {
       res.render("shop/orders", {
         pageTitle: "Orders",

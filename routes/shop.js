@@ -7,10 +7,10 @@ const router = express.Router();
 router.get("/", shopController.getIndex);
 router.get("/products", shopController.getProducts);
 router.get("/products/:productId", shopController.getProduct); // :(...) allows us to tell express router that there's coming dynamic data in the route. Be cereful with order of routes
-// router.get("/cart", shopController.getCart);
-// router.post("/cart-delete-item", shopController.postCartDeleteProduct);
-// router.post("/cart", shopController.postCart);
-// router.get("/orders", shopController.getOrders);
-// router.post("/create-order", shopController.postOrder);
+router.get("/cart", shopController.getCart);
+router.post("/cart-delete-item", shopController.postCartDeleteProduct);
+router.post("/cart", shopController.postCart);
+router.get("/orders", shopController.getOrders);
+router.post("/create-order", shopController.postOrder);
 
 module.exports = router;

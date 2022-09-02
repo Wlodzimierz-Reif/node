@@ -26,7 +26,13 @@ exports.postAddProduct = (req, res, next) => {
     // imageUrl,
     // null,
     // req.user._id
-    { title: title, price: price, description: description, imageUrl: imageUrl }
+    {
+      title: title,
+      price: price,
+      description: description,
+      imageUrl: imageUrl,
+      userId: req.user, // we save user in request in app.js. Mongoose will automatically add "._id"
+    }
   );
   product
     .save() // now this method comes from mongoose. Our "save()" is commented out
@@ -42,6 +48,13 @@ exports.postAddProduct = (req, res, next) => {
 exports.getProducts = (req, res, next) => {
   // Product.fetchAll()
   Product.find() // mongoose method
+
+    //  EXTRA MONGOOSE METHODS FOR FETCHING DATA
+    ///////////
+    // .select("title price -_id") // SELECT WHICH DATA TO FETCH - fetches title, price but no Id
+    // .populate("userId") // fetches all user object related to this product
+    ///////////////
+
     .then((products) => {
       res.render("admin/products", {
         products: products,
@@ -117,7 +130,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  // Product.deleteById(prodId) 
+  // Product.deleteById(prodId)
   Product.findByIdAndDelete(prodId) // Mongoose method
     .then(() => {
       console.log("Destroyed record");
