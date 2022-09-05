@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
+const authRoutes = require("./routes/auth");
 const { getPageNotFound } = require("./controllers/404");
 
 const { mongoConnect } = require("./helpers/database");
@@ -38,6 +39,7 @@ app.use((req, res, next) => {
 // REGISTERS ROUTES (Middleware)
 app.use("/admin", adminRoutes); // allows to omit "/admin" when setting routes in adminRoutes
 app.use(shopRoutes);
+app.use(authRoutes);
 app.use(getPageNotFound);
 
 // mongoConnect(() => {
