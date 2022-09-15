@@ -3,6 +3,8 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const session = require("express-session");
+const MondoDBStore = require("connect-mongodb-session")(session);
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
@@ -12,7 +14,14 @@ const { getPageNotFound } = require("./controllers/404");
 const { mongoConnect } = require("./helpers/database");
 const User = require("./models/user");
 
+const MONGODB_URI =
+  "mongodb+srv://wlodev:wlodev@cluster0.nrwbdc3.mongodb.net/shop?retryWrites=true&w=majority";
+
 const app = express();
+const store = new MondoDBStore({
+  uri: MONGODB_URI,
+  collection: "session",
+});
 
 // SETS UP THE VIEWS ENGINE AND FOLDER
 app.set("view engine", "ejs"); // tells the app what tempate engine to use. "hbs" tell the app which file extension to use(could be anything)
@@ -22,9 +31,23 @@ app.set("views", "views"); // tells the app there to find the views (the default
 // All of that will be used only if we run succesfully sequeize initialisation
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public"))); // enables read access to external css files and omiting "../../../public/css..." when importing the stylesheet in html head
+app.use(
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+    // cookie: { maxAge: 10000 },
+    // this middleware can set cookies and read its value
+  })
+); // resave saves the session on every reponse, saveUninitializes stops from saving session when nothing was changes about it,
 
+// I need the below to use full User Model with methods even though we have user saved in the session. The user saved in session pushed to MongoDB has only the user data, not the User model methods.
 app.use((req, res, next) => {
-  User.findById("63103d2300a49b7e27cb2d59") // now it's mongoose method
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id) // now it's mongoose method
     .then((user) => {
       // that instead of req.user = user gives me class of User that I can use all User methods on instead of just data
       // req.user = new User(user.name, user.email, user.cart, user._id); // now we can use the fetched user in our app
@@ -46,9 +69,7 @@ app.use(getPageNotFound);
 //   app.listen(3000);
 // });
 mongoose
-  .connect(
-    "mongodb+srv://wlodev:wlodev@cluster0.nrwbdc3.mongodb.net/shop?retryWrites=true&w=majority"
-  )
+  .connect(MONGODB_URI)
   .then((result) => {
     User.findOne().then((user) => {
       // findOne without params returns first found

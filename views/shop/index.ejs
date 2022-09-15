@@ -31,7 +31,9 @@
                   </p>
                 </div>
                 <div class="card__actions">
-                  <%- include("../includes/add-to-cart.ejs", {product: product}) %>
+                  <% if (isAuthenticated) { %>
+                    <%- include("../includes/add-to-cart.ejs", {product: product}) %>
+                  <% } %>
                   <!-- need to pass {product: product} as product is a local variable in this loop so it cannot access product  -->
                 </div>
               </article>
